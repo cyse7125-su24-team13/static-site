@@ -7,13 +7,12 @@ pipeline {
         GIT_REPO = 'https://github.com/cyse7125-su24-team13/static-site.git'
         BRANCH = 'main'
     }
-    stages {
-        stage('Pre-Cleanup') {
-            steps {
-                cleanWs()
-            }
+    options {
+        credentialsBinding {
+            usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')
         }
-        
+    }
+    stages {
         stage('Checkout Code') {
             steps {
                 git branch: BRANCH, credentialsId: 'github-token', url: GIT_REPO
@@ -22,8 +21,7 @@ pipeline {
         stage('Login to Docker Hub') {
             steps {
                 script {
-                    docker.withRegistry('', REGISTRY_CREDENTIALS_ID) {
-                        // This block ensures we log into Docker Hub using the credentials stored in Jenkins
+                        sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
                     }
                 }
             }
