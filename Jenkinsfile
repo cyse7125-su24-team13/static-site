@@ -16,7 +16,7 @@ pipeline {
         
         stage('Checkout Code') {
             steps {
-                git branch: BRANCH, url: GIT_REPO
+                git branch: BRANCH, credentialsId: 'github-token', url: GIT_REPO
             }
         }
         stage('Login to Docker Hub') {
