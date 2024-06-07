@@ -8,6 +8,11 @@ pipeline {
         BRANCH = 'main'
     }
     stages {
+        stage('Pre-Cleanup') {
+            steps {
+                cleanWs()
+            }
+        }
         stage('Checkout Code') {
             steps {
                 script {
