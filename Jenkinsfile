@@ -7,41 +7,46 @@ pipeline {
         GIT_REPO = 'https://github.com/cyse7125-su24-team13/static-site.git'
         BRANCH = 'main'
     }
-    options {
-        credentialsBinding {
-            usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')
-        }
-    }
     stages {
         stage('Checkout Code') {
             steps {
-                git branch: BRANCH, credentialsId: 'github-token', url: GIT_REPO
+                script {
+                    // Properly using credentials to checkout code
+                    checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: BRANCH]],
+                        userRemoteConfigs: [[
+                            url: GIT_REPO,
+                            credentialsId: 'github-token'
+                        ]]
+                    ])
+                }
             }
         }
         stage('Login to Docker Hub') {
             steps {
                 script {
+                    // Using credentials to login to Docker Hub
+                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
                     }
                 }
+            }
         }
         stage('Build and Push Docker Image') {
             steps {
                 script {
-                    // Enabling Docker experimental features for buildx
+                    // Assuming Docker and Docker Buildx are configured on the Jenkins agent
                     sh "export DOCKER_CLI_EXPERIMENTAL=enabled"
-                    // Setup buildx
                     sh "docker buildx create --use --name mybuilder"
                     sh "docker buildx inspect --bootstrap"
-                    // Build and push
-                    sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${DOCKER_REPO}:${BUILD_NUMBER} . --push"
+                    sh "docker buildx build --platform linux/amd64,linux/arm64 -t ${env.DOCKER_REPO}:${env.BUILD_NUMBER} . --push"
                 }
             }
         }
         stage('Cleanup') {
             steps {
                 script {
-                    // Clean up buildx builder
                     sh "docker buildx rm mybuilder"
                 }
             }
@@ -49,7 +54,7 @@ pipeline {
     }
     post {
         always {
-            // Logout from Docker Hub to ensure we clean up session tokens
+            // Logout from Docker Hub to ensure session tokens are cleaned up
             sh "docker logout"
         }
     }
