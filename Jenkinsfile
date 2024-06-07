@@ -8,6 +8,12 @@ pipeline {
         BRANCH = 'main'
     }
     stages {
+        stage('Pre-Cleanup') {
+            steps {
+                cleanWs()
+            }
+        }
+        
         stage('Checkout Code') {
             steps {
                 git branch: BRANCH, url: GIT_REPO
