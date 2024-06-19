@@ -1,5 +1,5 @@
 # Static Site with Caddy
-
+demo
 This repository contains code for setting up a static site using Caddy file server.
 
 ## Instructions
